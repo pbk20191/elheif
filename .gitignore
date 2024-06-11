@@ -1,0 +1,8 @@
+/build
+/build-native
+/.cache
+/node_modules
+/pkg/elheif-wasm.js
+/pkg/elheif-wasm-worker.js
+/pkg/elheif-wasm.wasm
+/coverage
