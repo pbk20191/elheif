@@ -1,0 +1,42 @@
+name: Build and test
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - name: Prepare emscripten
+        run: node ./scripts/install-emscripten.mjs
+      - name: Prepare dependencies
+        run: |
+          pnpm install
+      - name: Run build wasm
+        shell: bash
+        run: |
+          source ./emsdk/emsdk_env.sh
+          pnpm run build:js
+        env:
+          EMSCRIPTEN_ROOT: ${{ github.workspace }}/emsdk
+          CC: clang
+          CXX: clang++
+      - name: Run test wasm (Wasm)
+        run: |
+          pnpx playwright install-deps
+          pnpx playwright install
+          pnpm run test:js
+        env:
+          TEST_WEBKIT: 1
+      - name: Run build & tests (C++)
+        run: |
+          pnpm run build:native
+          pnpm run test:native
+        env:
+          CC: clang
+          CXX: clang++

@@ -10,11 +10,12 @@ export default {
         playwrightLauncher({
             product: 'chromium',
         }),
+        playwrightLauncher({ product: 'firefox' }),
+        ...(process.env.TEST_WEBKIT ? [playwrightLauncher({ product: 'webkit' })] : []),
     ],
     plugins: [
         esbuildPlugin({ ts: true }),
     ],
-    middleware: [add_headers],
     coverage: true,
     coverageConfig: {
         reporters: ['lcovonly', 'clover'],

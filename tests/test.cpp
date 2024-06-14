@@ -47,5 +47,10 @@ TEST(HeifTest, Encode) {
 
   // Expect equality.
   EXPECT_EQ(encoded.err, "");
-  EXPECT_EQ(encoded.data.size(), 110151);
+
+  auto decoded2 = Elheif::decode(encoded.data.data(), encoded.data.size());
+  EXPECT_EQ(decoded2.data.size(), 1);
+  EXPECT_EQ(decoded2.err, "");
+  EXPECT_EQ(decoded2.data[0].width, 1280);
+  EXPECT_EQ(decoded2.data[0].height, 720);
 }

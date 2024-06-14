@@ -1,6 +1,9 @@
 # elheif
 
-A wasm heic image encoder and decoder library compiled from [libheif](https://github.com/strukturag/libheif), [libde265](https://github.com/strukturag/libde265) and kvazaar. The library is just a wrapper of `libheif` and compiled to WASM using Emscripten
+![Main](https://github.com/hpp2334/elheif/actions/workflows/main.yml/badge.svg)
+[![npm version](https://badge.fury.io/js/elheif.svg)](https://badge.fury.io/js/elheif)
+
+A wasm heic image encoder and decoder library compiled from [libheif](https://github.com/strukturag/libheif), [libde265](https://github.com/strukturag/libde265) and kvazaar. The library is just a wrapper of `libheif` and compiled to WASM using Emscripten.
 
 ## API
 
