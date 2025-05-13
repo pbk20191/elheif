@@ -154,7 +154,7 @@ DecodeResult decode(const std::uint8_t *buffer, int byteSize) {
   Ctx ctx;
   assert(ctx.get() != nullptr);
 
-  WRAP_ERR_RET("init", heif_init(nullptr));
+  // WRAP_ERR_RET("init", heif_init(nullptr));
   WRAP_ERR_RET("read from memory", heif_context_read_from_memory(
                                        ctx.get(), buffer, byteSize, nullptr));
 
