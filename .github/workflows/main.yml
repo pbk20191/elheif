@@ -12,6 +12,15 @@ jobs:
       - uses: pnpm/action-setup@v2
         with:
           version: 8
+      - name: Set up Cache for build folders
+        uses: actions/cache@v4
+        with:
+          path: |
+            build
+            build-native
+          key: build-cache-${{ github.sha }}
+          restore-keys: |
+            build-cache-
       - name: Prepare emscripten
         run: node ./scripts/install-emscripten.mjs
       - name: Prepare dependencies
