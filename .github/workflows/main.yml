@@ -1,6 +1,10 @@
 name: Build and test
 on: [push, workflow_dispatch]
 
+env:
+  EM_CACHE_FOLDER: 'emsdk-cache'
+  # EM_VERSION: '4.0.8'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -9,7 +13,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - uses: pnpm/action-setup@v2
+
+      - uses: mymindstorm/setup-emsdk@v14
+        with:
+          actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
+      - uses: pnpm/action-setup@v4
         with:
           version: 8
       - name: Set up Cache for build folders
@@ -21,18 +29,17 @@ jobs:
           key: build-cache-${{ github.sha }}
           restore-keys: |
             build-cache-
-      - name: Prepare emscripten
-        run: node ./scripts/install-emscripten.mjs
-      - name: Prepare dependencies
-        run: |
-          pnpm install
+      # - name: Prepare emscripten
+      #   run: node ./scripts/install-emscripten.mjs
+      # - name: Prepare dependencies
+      #   run: |
+      #     pnpm install
       - name: Run build wasm
         shell: bash
         run: |
-          source ./emsdk/emsdk_env.sh
+          export EMSCRIPTEN_ROOT="$EMSDK"
           pnpm run build:js
         env:
-          EMSCRIPTEN_ROOT: ${{ github.workspace }}/emsdk
           CC: clang
           CXX: clang++
       - name: Run build & tests (C++)
