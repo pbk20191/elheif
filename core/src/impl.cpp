@@ -109,7 +109,7 @@ EncodeResult encode(const std::uint8_t* buffer, int byteSize, int width, int hei
     heif_image_create(width, height, heif_colorspace_RGB,
                       heif_chroma_interleaved_RGBA, img.data()));
   WRAP_ERR_RET("add plane",
-    heif_image_add_plane(img.get(), CHANNEL, width, height, 32));
+    heif_image_add_plane(img.get(), CHANNEL, width, height, 8));
 
   int stride = 0;
   auto* plane = heif_image_get_plane(img.get(), CHANNEL, &stride);
