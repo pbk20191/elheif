@@ -19,13 +19,19 @@ if (EMSCRIPTEN)
 endif()
 
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+  set(SED_INLINE '')
+else()
+  set(SED_INLINE)
+endif()
+cmake_print_variables(SED_INLINE CMAKE_SYSTEM_NAME)
 
 ExternalProject_Add(kvazaar 
   GIT_REPOSITORY https://github.com/ultravideo/kvazaar.git
   SOURCE_DIR        ${CMAKE_BINARY_DIR}/kvazaar-src
   BINARY_DIR        ${CMAKE_BINARY_DIR}/kvazaar-build
   TEST_COMMAND      ""
-  PATCH_COMMAND     sed -i "/-muse-unaligned-vector-move/d" ${CMAKE_BINARY_DIR}/kvazaar-src/CMakeLists.txt
+  PATCH_COMMAND     sed -i ${SED_INLINE} "/-muse-unaligned-vector-move/d" ${CMAKE_BINARY_DIR}/kvazaar-src/CMakeLists.txt
   CMAKE_ARGS        -DBUILD_TESTS=OFF -DBUILD_SHARED_LIBS=OFF ${EXTERNAL_PROJECT_EXTRA_CMAKE_ARGS}
 )
 
