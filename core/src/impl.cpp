@@ -55,6 +55,15 @@ struct Encoder {
   constexpr static void free(Type *ptr) { heif_encoder_release(ptr); }
 };
 
+struct EncodingOptions {
+  using Type = heif_encoding_options;
+  constexpr static void free(Type *ptr) { heif_encoding_options_free(ptr); }
+};
+
+struct DecodingOptions {
+  using Type = heif_decoding_options;
+  constexpr static void free(Type *ptr) { heif_decoding_options_free(ptr); }
+};
 } // namespace AutoFreeWrapperPresets
 
 template <typename T> class AutoFreeWrapper {
@@ -83,6 +92,10 @@ private:
 using ImageHandle = AutoFreeWrapper<AutoFreeWrapperPresets::ImageHandle>;
 using Image = AutoFreeWrapper<AutoFreeWrapperPresets::Image>;
 using Encoder = AutoFreeWrapper<AutoFreeWrapperPresets::Encoder>;
+using EncodingOptions =
+    AutoFreeWrapper<AutoFreeWrapperPresets::EncodingOptions>;
+using DecodingOptions =
+    AutoFreeWrapper<AutoFreeWrapperPresets::DecodingOptions>;
 
 static heif_error write_impl(heif_context *ctx, const void *data, size_t size,
                              void *userdata) {
@@ -111,10 +124,12 @@ EncodeResult encode(const std::uint8_t* buffer, int byteSize, int width, int hei
   WRAP_ERR_RET("add plane",
     heif_image_add_plane(img.get(), CHANNEL, width, height, 8));
 
+    // heif_image_set_
   int stride = 0;
   auto* plane = heif_image_get_plane(img.get(), CHANNEL, &stride);
   if (!plane) return {.err = "plane is null"};
-
+  
+  // memcpy(plane, buffer, byteSize)
   if (stride == width * 4) {
     memcpy(plane, buffer, width * height * 4);
   } else {
@@ -127,11 +142,18 @@ EncodeResult encode(const std::uint8_t* buffer, int byteSize, int width, int hei
 
   Ctx ctx;
   Encoder encoder;
+  EncodingOptions options;
   WRAP_ERR_RET("get encoder",
     heif_context_get_encoder_for_format(ctx.get(),
       heif_compression_HEVC, encoder.data()));
+  *options.data() = heif_encoding_options_alloc();
+  ImageHandle handle;
+
   WRAP_ERR_RET("encode image",
-    heif_context_encode_image(ctx.get(), img.get(), encoder.get(), nullptr, nullptr));
+    heif_context_encode_image(ctx.get(), img.get(), encoder.get(), options.get(), handle.data()));
+
+  WRAP_ERR_RET("set primary image",
+    heif_context_set_primary_image(ctx.get(), handle.get()));
 
   std::vector<uint8_t> data;
   auto writer = heif_writer {

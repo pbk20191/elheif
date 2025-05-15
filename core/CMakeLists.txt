@@ -24,7 +24,6 @@ if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
 else()
   set(SED_INLINE)
 endif()
-cmake_print_variables(SED_INLINE CMAKE_SYSTEM_NAME)
 
 ExternalProject_Add(kvazaar 
   GIT_REPOSITORY https://github.com/ultravideo/kvazaar.git
