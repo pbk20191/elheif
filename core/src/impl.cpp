@@ -96,55 +96,51 @@ static heif_error write_impl(heif_context *ctx, const void *data, size_t size,
   };
 }
 
-EncodeResult encode(const std::uint8_t *buffer, int byteSize, int width,
-                    int height) {
+EncodeResult encode(const std::uint8_t* buffer, int byteSize, int width, int height) {
   constexpr auto CHANNEL = heif_channel::heif_channel_interleaved;
-  auto _ = CallerGuard();
-
-  Image img;
-  WRAP_ERR_RET(
-      "create image",
-      heif_image_create(width, height, heif_colorspace::heif_colorspace_RGB,
-                        heif_chroma::heif_chroma_interleaved_RGBA, img.data()));
-  WRAP_ERR_RET("add plane",
-               heif_image_add_plane(img.get(), CHANNEL, width, height, 8));
-
-  int stride = 0;
-  auto *plane = heif_image_get_plane(img.get(), CHANNEL, &stride);
-  if (plane == nullptr) {
-    return {.err = "plane is null"};
+  if (byteSize < width * height * 4) {
+    return {.err = "input buffer size too small"};
   }
 
+  auto _ = CallerGuard();
+  Image img;
+
+  WRAP_ERR_RET("create image",
+    heif_image_create(width, height, heif_colorspace_RGB,
+                      heif_chroma_interleaved_RGBA, img.data()));
+  WRAP_ERR_RET("add plane",
+    heif_image_add_plane(img.get(), CHANNEL, width, height, 32));
+
+  int stride = 0;
+  auto* plane = heif_image_get_plane(img.get(), CHANNEL, &stride);
+  if (!plane) return {.err = "plane is null"};
+
   if (stride == width * 4) {
-    memcpy(plane, buffer, stride * height);
+    memcpy(plane, buffer, width * height * 4);
   } else {
-    for (auto y = 0; y < height; y++) {
-      auto ptr = plane + y * stride;
-      auto n = width * 4;
-      memcpy(plane + y * stride, buffer + y * width * 4, n);
+    for (int y = 0; y < height; ++y) {
+      auto dst = plane + y * stride;
+      auto src = buffer + y * width * 4;
+      memcpy(dst, src, width * 4);
     }
   }
 
   Ctx ctx;
   Encoder encoder;
   WRAP_ERR_RET("get encoder",
-               heif_context_get_encoder_for_format(
-                   ctx.get(), heif_compression_format::heif_compression_HEVC,
-                   encoder.data()));
+    heif_context_get_encoder_for_format(ctx.get(),
+      heif_compression_HEVC, encoder.data()));
   WRAP_ERR_RET("encode image",
-               heif_context_encode_image(ctx.get(), img.get(), encoder.get(),
-                                         nullptr, nullptr));
+    heif_context_encode_image(ctx.get(), img.get(), encoder.get(), nullptr, nullptr));
 
-  auto writer = heif_writer{
-      .writer_api_version = 1,
-      .write = write_impl,
+  std::vector<uint8_t> data;
+  auto writer = heif_writer {
+    .writer_api_version = 1,
+    .write = write_impl,
   };
-  std::vector<std::uint8_t> data;
   WRAP_ERR_RET("write", heif_context_write(ctx.get(), &writer, &data));
 
-  return {
-      .data = data,
-  };
+  return {.data = std::move(data)};
 }
 
 DecodeResult decode(const std::uint8_t *buffer, int byteSize) {
@@ -197,16 +193,15 @@ DecodeResult decode(const std::uint8_t *buffer, int byteSize) {
     std::vector<std::uint8_t> data;
 
     if (stride == width * 4) {
-      std::copy(plane, plane + stride * height, std::back_inserter(data));
+      data.insert(data.end(), plane, plane + width * height * 4);
     } else {
-      for (auto y = 0; y < height; y++) {
-        auto ptr = plane + y * stride;
-        auto n = width * 4;
-        std::copy(ptr, ptr + n, std::back_inserter(data));
+      for (int y = 0; y < height; y++) {
+        const auto* row = plane + y * stride;
+        data.insert(data.end(), row, row + width * 4);
       }
     }
 
-    std::copy(plane, plane + stride * height, std::back_inserter(data));
+    // std::copy(plane, plane + stride * height, std::back_inserter(data));
     bitmaps.emplace_back(Bitmap{
         .width = width,
         .height = height,

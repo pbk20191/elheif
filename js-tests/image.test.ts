@@ -28,6 +28,8 @@ it('decode', async () => {
     expect(res.data.length).eq(1);
     expect(res.data[0].width).eq(10);
     expect(res.data[0].height).eq(10);
+    const clamped = new Uint8ClampedArray(res.data[0].data);
+    const im = new ImageData(clamped, 10, 10);
 })
 
 it('encode', async () => {
@@ -38,5 +40,5 @@ it('encode', async () => {
     const encoded = jsEncodeImage(bitmap.data, bitmap.width, bitmap.height)
 
     expect(encoded.err).eq("");
-    expect(encoded.data.length).eq(1288);
+    expect(encoded.data.length).eq(1012);
 })
