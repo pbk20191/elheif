@@ -3,7 +3,7 @@ on: [push, workflow_dispatch]
 
 env:
   EM_CACHE_FOLDER: 'emsdk-cache'
-  # EM_VERSION: '4.0.8'
+  # EM_VERSION: '3.1.60'
 
 jobs:
   build:
@@ -13,39 +13,31 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: mymindstorm/setup-emsdk@v14
         with:
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
-      - uses: pnpm/action-setup@v4
+      - name: Set up Cache for build folders
+        uses: actions/cache@v4
         with:
-          version: 8
-      # - name: Set up Cache for build folders
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: |
-      #       build
-      #       build-native
-      #     key: build-cache-${{ github.sha }}
-      #     restore-keys: |
-      #       build-cache-
+          path: |
+            build
+            build-native
+          key: build-cache-${{ github.sha }}
+          restore-keys: |
+            build-cache-
       # - name: Prepare emscripten
       #   run: node ./scripts/install-emscripten.mjs
-      # - name: Prepare dependencies
-      #   run: |
-      #     pnpm install
+      - name: Prepare dependencies
+        run: |
+          pnpm install
       - name: Run build wasm
         shell: bash
         run: |
           export EMSCRIPTEN_ROOT="$EMSDK"
           pnpm run build:js
-        env:
-          CC: clang
-          CXX: clang++
-      - name: Run build & tests (C++)
-        run: |
-          pnpm run build:native
-          pnpm run test:native
         env:
           CC: clang
           CXX: clang++
@@ -56,4 +48,11 @@ jobs:
           pnpm run test:js
         env:
           TEST_WEBKIT: 1
+      - name: Run build & tests (C++)
+        run: |
+          pnpm run build:native
+          pnpm run test:native
+        env:
+          CC: clang
+          CXX: clang++
 

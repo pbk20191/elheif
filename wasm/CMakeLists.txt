@@ -13,7 +13,6 @@ target_link_libraries(elheif-wasm PRIVATE elheif
     -lembind
     -sINITIAL_MEMORY=64MB
     -sEXPORT_NAME=__ELHEIF_MODULE
-    -sUSE_ES6_IMPORT_META=0
     -sSINGLE_FILE=1
     -sENVIRONMENT=web,worker
     -sALLOW_MEMORY_GROWTH=1
