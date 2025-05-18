@@ -122,7 +122,7 @@ EncodeResult encode(const std::uint8_t* buffer, int byteSize, int width, int hei
     heif_image_create(width, height, heif_colorspace_RGB,
                       heif_chroma_interleaved_RGBA, img.data()));
   WRAP_ERR_RET("add plane",
-    heif_image_add_plane(img.get(), CHANNEL, width, height, 8));
+    heif_image_add_plane(img.get(), CHANNEL, width, height, 32));
 
     // heif_image_set_
   int stride = 0;
@@ -151,9 +151,6 @@ EncodeResult encode(const std::uint8_t* buffer, int byteSize, int width, int hei
 
   WRAP_ERR_RET("encode image",
     heif_context_encode_image(ctx.get(), img.get(), encoder.get(), options.get(), handle.data()));
-
-  WRAP_ERR_RET("set primary image",
-    heif_context_set_primary_image(ctx.get(), handle.get()));
 
   std::vector<uint8_t> data;
   auto writer = heif_writer {
