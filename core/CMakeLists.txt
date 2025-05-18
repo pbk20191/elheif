@@ -4,7 +4,7 @@ include(FetchContent)
 include(ExternalProject)
 
 option(EMSCRIPTEN "Build to empscripten")
-
+option(EMS_EXTRA "Add Extra support" OFF)
 
 set(EXTRA_CXX_FLAGS "-D__EMSCRIPTEN_STANDALONE_WASM__=1")
 # set(EXTRA_CXX_FLAGS "-D__EMSCRIPTEN_STANDALONE_WASM__=1 -pthread")
@@ -41,6 +41,36 @@ ExternalProject_Add(libde265
   CMAKE_ARGS        -DENABLE_SDL=OFF -DENABLE_DECODER=OFF -DBUILD_SHARED_LIBS=OFF ${EXTERNAL_PROJECT_EXTRA_CMAKE_ARGS}
 )
 
+if (EMSCRIPTEN AND EMS_EXTRA)
+    ExternalProject_Add(zlib
+    GIT_REPOSITORY https://github.com/madler/zlib.git
+    SOURCE_DIR        ${CMAKE_BINARY_DIR}/zlib-src
+    BINARY_DIR        ${CMAKE_BINARY_DIR}/zlib-build
+    TEST_COMMAND      ""
+    CMAKE_ARGS        -DZLIB_BUILD_TESTING=OFF -DZLIB_BUILD_SHARED=OFF -DZLIB_BUILD_STATIC=ON ${EXTERNAL_PROJECT_EXTRA_CMAKE_ARGS}
+  )
+  ExternalProject_Add(png
+    GIT_REPOSITORY https://github.com/pnggroup/libpng.git
+    SOURCE_DIR        ${CMAKE_BINARY_DIR}/libpng-src
+    BINARY_DIR        ${CMAKE_BINARY_DIR}/libpng-build
+    TEST_COMMAND      ""
+    CMAKE_ARGS        -DPNG_TESTS=OFF -DPNG_EXECUTABLES=OFF -DPNG_SHARED=OFF -DPNG_STATIC=ON -DPNG_DEBUG=OFF -DZLIB_INCLUDE_DIR=${CMAKE_BINARY_DIR}/zlib-build/install/install/include -DZLIB_LIBRARY=${CMAKE_BINARY_DIR}/zlib-build/install/install/lib/libz.a ${EXTERNAL_PROJECT_EXTRA_CMAKE_ARGS}
+    DEPENDS           zlib
+  )
+  ExternalProject_Add(aom
+    GIT_REPOSITORY https://aomedia.googlesource.com/aom
+    GIT_TAG           v3.12.1
+    SOURCE_DIR        ${CMAKE_BINARY_DIR}/aom-src
+    BINARY_DIR        ${CMAKE_BINARY_DIR}/aom-build
+    TEST_COMMAND      ""
+    CMAKE_ARGS        -DAOM_TARGET_CPU=generic -DBUILD_SHARED_LIBS=OFF -DCONFIG_AV1_ENCODER=1 -DENABLE_DOCS=0 -DENABLE_EXAMPLES=0 -DENABLE_TESTDATA=0 -DENABLE_TESTS=0 -DENABLE_TOOLS=0 -DENABLE_CCACHE=1 ${EXTERNAL_PROJECT_EXTRA_CMAKE_ARGS}
+  )
+endif()
+
+
+
+# set(CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/aom/bui")
+
 set(LIBDE265_INCLUDE_DIR ${CMAKE_BINARY_DIR}/libde265-build/install/include)
 set(LIBDE265_LIBRARY_DIR ${CMAKE_BINARY_DIR}/libde265-build/libde265)
 set(LIBDE265_LIBRARY ${LIBDE265_LIBRARY_DIR}/libde265.a)
@@ -48,6 +78,28 @@ set(KVAZAAR_INCLUDE_DIR ${CMAKE_BINARY_DIR}/kvazaar-build/install/include)
 set(KVAZAAR_LIBRARY_DIR ${CMAKE_BINARY_DIR}/kvazaar-build/install/lib)
 set(KVAZAAR_LIBRARY ${KVAZAAR_LIBRARY_DIR}/libkvazaar.a)
 set(LIBHEIF_LIBRARY_DIR ${CMAKE_BINARY_DIR}/libheif-build/install/lib)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+set(EXTRA_LIB_ARGS -DLIBDE265_INCLUDE_DIR=${LIBDE265_INCLUDE_DIR})
+set(EXTRA_LIB_ARGS ${EXTRA_LIB_ARGS} -DLIBDE265_LIBRARY=${LIBDE265_LIBRARY})
+set(EXTRA_LIB_ARGS ${EXTRA_LIB_ARGS} -DKVAZAAR_INCLUDE_DIR=${KVAZAAR_INCLUDE_DIR})
+set(EXTRA_LIB_ARGS ${EXTRA_LIB_ARGS} -DKVAZAAR_LIBRARY=${KVAZAAR_LIBRARY})
+
+if (EMSCRIPTEN AND EMS_EXTRA)
+  set(AOM_INCLUDE_DIR ${CMAKE_BINARY_DIR}/aom-build/install/include)
+  set(AOM_LIBRARY_DIR ${CMAKE_BINARY_DIR}/aom-build/install/lib)
+  set(AOM_LIBRARY ${AOM_LIBRARY_DIR}/libaom.a)
+  set(EXTRA_LIB_ARGS ${EXTRA_LIB_ARGS} -DZLIB_LIBRARY=${CMAKE_BINARY_DIR}/zlib-build/install/install/lib/libz.a)
+  set(EXTRA_LIB_ARGS ${EXTRA_LIB_ARGS} -DZLIB_INCLUDE_DIR=${CMAKE_BINARY_DIR}/zlib-build/install/install/include)
+  set(EXTRA_LIB_ARGS ${EXTRA_LIB_ARGS} -DPNG_PNG_INCLUDE_DIR=${CMAKE_BINARY_DIR}/libpng-build/install/include)
+  set(EXTRA_LIB_ARGS ${EXTRA_LIB_ARGS} -DPNG_LIBRARY=${CMAKE_BINARY_DIR}/libpng-build/install/lib/libpng.a)
+  set(EXTRA_LIB_ARGS ${EXTRA_LIB_ARGS} -DAOM_INCLUDE_DIR=${AOM_INCLUDE_DIR})
+  set(EXTRA_LIB_ARGS ${EXTRA_LIB_ARGS} -DAOM_LIBRARY=${AOM_LIBRARY})
+  set(CORE_LINKERS -laom -L${AOM_LIBRARY_DIR})
+else()
+  set(EXTRA_LIB_ARGS ${EXTRA_LIB_ARGS} -DWITH_AOM_ENCODER=OFF -DWITH_AOM_DECODER=OFF)
+  set(CORE_LINKERS )
+endif()
 
 ExternalProject_Add(
   libheif
@@ -55,16 +107,20 @@ ExternalProject_Add(
   SOURCE_DIR        ${CMAKE_BINARY_DIR}/libheif-src
   BINARY_DIR        ${CMAKE_BINARY_DIR}/libheif-build
   TEST_COMMAND      ""
-  CMAKE_ARGS        -DWITH_KVAZAAR=ON -DWITH_GDK_PIXBUF=OFF -DWITH_EXAMPLES=OFF -DENABLE_MULTITHREADING_SUPPORT=OFF -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=OFF -DLIBDE265_INCLUDE_DIR=${LIBDE265_INCLUDE_DIR} -DLIBDE265_LIBRARY=${LIBDE265_LIBRARY} -DKVAZAAR_INCLUDE_DIR=${KVAZAAR_INCLUDE_DIR} -DKVAZAAR_LIBRARY=${KVAZAAR_LIBRARY} ${EXTERNAL_PROJECT_EXTRA_CMAKE_ARGS}
+  CMAKE_ARGS        -DWITH_LIBSHARPYUV=OFF ${EXTRA_LIB_ARGS} -DWITH_SvtEnc=OFF -DWITH_RAV1E=OFF -DENABLE_EXPERIMENTAL_FEATURES=ON -DWITH_KVAZAAR=ON -DWITH_X265=OFF -DWITH_GDK_PIXBUF=OFF -DWITH_OpenH264_DECODER=OFF -DWITH_EXAMPLES=OFF -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=OFF ${EXTERNAL_PROJECT_EXTRA_CMAKE_ARGS}
+  DEPENDS           libde265 kvazaar
 )
 
 set(CMAKE_CXX_STANDARD 17)
 
 add_library(elheif STATIC src/impl.cpp)
-add_dependencies(elheif kvazaar libde265 libheif)
-add_dependencies(libheif kvazaar libde265)
+add_dependencies(elheif libheif)
+if (EMSCRIPTEN AND EMS_EXTRA)
+  add_dependencies(libheif png aom)
+endif()
 target_include_directories(elheif PUBLIC include)
 target_include_directories(elheif PRIVATE ${CMAKE_BINARY_DIR}/libheif-build/install/include)
+
 target_link_libraries(elheif PUBLIC
   # -pthread
   -lheif
@@ -73,5 +129,6 @@ target_link_libraries(elheif PUBLIC
   -L${KVAZAAR_LIBRARY_DIR}
   -L${LIBDE265_LIBRARY_DIR}
   -L${LIBHEIF_LIBRARY_DIR}
+  ${CORE_LINKERS}
 )
 
