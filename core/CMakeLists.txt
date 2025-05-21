@@ -19,11 +19,6 @@ if (EMSCRIPTEN)
 endif()
 
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
-  set(SED_INLINE '')
-else()
-  set(SED_INLINE)
-endif()
 
 ExternalProject_Add(kvazaar 
   GIT_REPOSITORY https://github.com/ultravideo/kvazaar.git
@@ -103,6 +98,7 @@ endif()
 
 ExternalProject_Add(
   libheif
+  GIT_TAG           v1.19.8
   GIT_REPOSITORY    https://github.com/strukturag/libheif.git
   SOURCE_DIR        ${CMAKE_BINARY_DIR}/libheif-src
   BINARY_DIR        ${CMAKE_BINARY_DIR}/libheif-build

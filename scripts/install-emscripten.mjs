@@ -1,7 +1,7 @@
 import { execSync } from "child_process";
 import * as path from 'path'
 
-const EMSDK_VERSION = '3.1.60'
+const EMSDK_VERSION = '4.0.9'
 
 const ROOT = path.resolve(import.meta.dirname, '../')
 const EMSDK_ROOT = path.resolve(ROOT, './emsdk')
