@@ -6,7 +6,7 @@
   "main": "pkg/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/hpp2334/elheif"
+    "url": "https://github.com/pbk20191/elheif"
   },
   "scripts": {
     "build:native": "cmake -S . -B build-native -DCMAKE_BUILD_TYPE=Debug && cmake --build build-native --target elheif-test",
