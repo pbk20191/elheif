@@ -108,7 +108,7 @@ endif()
 # 00c8796cd0df98d9724577cf9110093d3915d549 <-> 5e9deb19fe6b3768af0bb8e9e5e8438b15171bf3
 ExternalProject_Add(
   libheif
-  GIT_TAG           v1.19.8
+  GIT_TAG           e0bfb132ab984ad3d7703b5183a9fb336d96f8a0
   GIT_REPOSITORY    https://github.com/strukturag/libheif.git
   SOURCE_DIR        ${CMAKE_BINARY_DIR}/libheif-src
   BINARY_DIR        ${CMAKE_BINARY_DIR}/libheif-build
