@@ -6,6 +6,12 @@ include(ExternalProject)
 option(EMSCRIPTEN "Build to empscripten")
 option(EMS_EXTRA "Add Extra support" OFF)
 
+if(MSVC)
+  # Specify the runtime library for MSVC
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MT")  # Static runtime (use /MD for dynamic)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MT")
+endif()
+
 set(EXTRA_CXX_FLAGS "-D__EMSCRIPTEN_STANDALONE_WASM__=1")
 # set(EXTRA_CXX_FLAGS "-D__EMSCRIPTEN_STANDALONE_WASM__=1 -pthread")
 
@@ -149,16 +155,27 @@ add_dependencies(elheif libheif)
 target_include_directories(elheif PUBLIC include)
 target_include_directories(elheif PRIVATE ${CMAKE_BINARY_DIR}/libheif-build/install/include)
 
-target_link_libraries(elheif PUBLIC
-  # -pthread
-  -lheif
-  -lde265
-  -lkvazaar
-  -lsharpyuv
-  -L${KVAZAAR_LIBRARY_DIR}
-  -L${LIBDE265_LIBRARY_DIR}
-  -L${LIBHEIF_LIBRARY_DIR}
-  -L${LIBSHARPYUV_LIBRARY_DIR}
-  ${CORE_LINKERS}
-)
-
+if(MSVC)
+  # Ensure paths to static libraries are correctly used
+  target_link_libraries(elheif PUBLIC
+    ${LIBHEIF_LIBRARY}
+    ${LIBDE265_LIBRARY}
+    ${KVAZAAR_LIBRARY}
+    ${LIBSHARPYUV_LIBRARY}
+    ${CORE_LINKERS}
+  )
+else()
+  # Use the Unix-like flags for Linux/macOS
+  target_link_libraries(elheif PUBLIC
+    # -pthread
+    -lheif
+    -lde265
+    -lkvazaar
+    -lsharpyuv
+    -L${KVAZAAR_LIBRARY_DIR}
+    -L${LIBDE265_LIBRARY_DIR}
+    -L${LIBHEIF_LIBRARY_DIR}
+    -L${LIBSHARPYUV_LIBRARY_DIR}
+    ${CORE_LINKERS}
+  )
+endif()

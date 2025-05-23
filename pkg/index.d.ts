@@ -1,11 +1,6 @@
 interface DecodeImageResult {
     err: string,
-    data: Array<{
-        width: number,
-        height: number,
-        /** RGBA8888 bitmap */
-        data: Uint8Array
-    }>
+    data: Array<ImageData>
 }
 
 interface EncodeImageResult {
@@ -20,4 +15,4 @@ export function ensureInitialized(): Promise<void>
 export function jsDecodeImage(buf: Uint8Array): DecodeImageResult;
 
 /** Convert RGBA bitmap to heic image */
-export function jsEncodeImage(buf: Uint8Array, width: number, height: number): EncodeImageResult;
+export function jsEncodeImage(buf: ImageData): EncodeImageResult;
