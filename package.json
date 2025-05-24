@@ -1,6 +1,6 @@
 {
   "name": "elheif",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A wasm heic image encoder and decoder library compiled from libheif, libde265 and kvazaar.",
   "type": "module",
   "main": "pkg/index.js",
@@ -11,7 +11,7 @@
   "scripts": {
     "build:native": "cmake -S . -B build-native -DCMAKE_BUILD_TYPE=Debug && cmake --build build-native --target elheif-test",
     "build:wasm": "emcmake cmake -S . -B build -DEMSCRIPTEN=ON -DCMAKE_BUILD_TYPE=Release && cmake --build build --target elheif-wasm",
-    "build:js": "pnpm build:wasm &&  cp ./build/wasm/elheif-wasm.js ./pkg/elheif-wasm.js && node ./scripts/patch-js.mjs",
+    "build:js": "npm run build:wasm &&  cp ./build/wasm/elheif-wasm.js ./pkg/elheif-wasm.js",
     "test:native": "./build-native/tests/elheif-test",
     "test:js": "web-test-runner"
   },

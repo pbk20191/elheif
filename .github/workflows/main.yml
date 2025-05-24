@@ -11,12 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v4
-        # with:
-        #   node-version: 20
-      - uses: pnpm/action-setup@v4
         with:
-          version: 8
-          run_install: true
+          cache: npm
+          cache-dependency-path: package-lock.json
       - uses: mymindstorm/setup-emsdk@v14
         with:
           actions-cache-folder: ${{env.EM_CACHE_FOLDER}}
@@ -38,21 +35,21 @@ jobs:
         shell: bash
         run: |
           export EMSCRIPTEN_ROOT="$EMSDK"
-          pnpm run build:js
+          npm run build:js
         env:
           CC: clang
           CXX: clang++
       - name: Run test wasm (Wasm)
         run: |
-          pnpx playwright install-deps
-          pnpx playwright install
-          pnpm run test:js
+          npx playwright install-deps
+          npx playwright install
+          npm run test:js
         env:
           TEST_WEBKIT: 1
       - name: Run build & tests (C++)
         run: |
-          pnpm run build:native
-          pnpm run test:native
+          npm run build:native
+          npm run test:native
         env:
           CC: clang
           CXX: clang++
