@@ -11,6 +11,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <emscripten/emscripten.h>
 
 emscripten::val vector_to_uint8array(const std::vector<uint8_t> &buffer)
 {
@@ -22,7 +23,7 @@ emscripten::val vector_to_uint8array(const std::vector<uint8_t> &buffer)
 
   return uint8array;
 }
-#include <assert.h>
+
 emscripten::val jsDecodeImage(const std::string &buffer)
 {
   using namespace emscripten;
@@ -32,6 +33,7 @@ emscripten::val jsDecodeImage(const std::string &buffer)
 
   auto retItems = emscripten::val::array();
   const val ImageData = emscripten::val::global("ImageData");
+  const val Error = emscripten::val::global("Error");
   for (const auto &item : res.data)
   {
     auto imageData = ImageData.new_(item.width, item.height);
@@ -41,9 +43,15 @@ emscripten::val jsDecodeImage(const std::string &buffer)
     retItems.call<void>("push", imageData);
   }
   auto ret = emscripten::val::object();
-  ret.set("err", res.err);
-  ret.set("data", retItems);
-  ret.set("error", res.error);
+  if (res.error.code == heif_error_Ok) {
+    ret.set("data", retItems);
+  } else {
+    auto error_option = emscripten::val::object();
+    error_option.set("cause", res.error);
+    const auto jsError = Error.new_(res.err, error_option);
+    ret.set("error", jsError);
+  }
+
   return ret;
 }
 
@@ -64,11 +72,18 @@ emscripten::val jsEncodeImage(const emscripten::val &imageData)
   auto res =
       Elheif::encode(reinterpret_cast<const std::uint8_t *>(pixelBuffer.data()),
                      pixelBuffer.size(), width, height);
-
+  const auto Error = emscripten::val::global("Error");
   auto ret = emscripten::val::object();
-  ret.set("err", res.err);
-  ret.set("data", vector_to_uint8array(res.data));
-  ret.set("error", res.error);
+  
+
+  if (res.error.code == heif_error_Ok) {
+    ret.set("data", vector_to_uint8array(res.data));
+  } else {
+    auto error_option = emscripten::val::object();
+    error_option.set("cause", res.error);
+    const auto jsError = Error.new_(res.err, error_option);
+    ret.set("error", jsError);
+  }
   return ret;
 }
 

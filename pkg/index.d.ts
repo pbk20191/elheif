@@ -1,9 +1,12 @@
 interface DecodeImageResult {
-    err: string,
-    data: Array<ImageData>
-    error: heif_error
+    // err: string,
+    data?: Array<ImageData>
+    error?:HeifError
 }
-interface heif_error {
+
+type HeifError = Error & { cause: heif_error_cause };
+
+interface heif_error_cause {
       // main error category
   code:{
     constructor: () => any,
@@ -21,9 +24,9 @@ interface heif_error {
 }
 
 interface EncodeImageResult {
-    err: string,
-    data: Uint8Array
-    error: heif_error
+    // err: string,
+    data?: Uint8Array
+    error?: HeifError
 }
 
 /** Should be called and wait till promise fulfilled when using other APIs */

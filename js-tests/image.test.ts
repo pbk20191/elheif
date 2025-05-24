@@ -23,11 +23,12 @@ it('decode', async () => {
 
     const buf = loadHeicImage();
     const res = jsDecodeImage(buf);
-    expect(res.err).eq("");
-    expect(res.data.length).eq(1);
-    expect(res.data[0].width).eq(10);
-    expect(res.data[0].height).eq(10);
-    const clamped = new Uint8ClampedArray(res.data[0].data);
+    console.log(res);
+    expect(res.error).eq(undefined);
+    expect(res.data!.length).eq(1);
+    expect(res.data![0].width).eq(10);
+    expect(res.data![0].height).eq(10);
+    const clamped = new Uint8ClampedArray(res.data![0].data);
     const im = new ImageData(clamped, 10, 10);
 })
 
@@ -35,9 +36,9 @@ it('encode', async () => {
     await ensureInitialized();
 
     const buf = loadHeicImage();
-    const bitmap = jsDecodeImage(buf).data[0];
+    const bitmap = jsDecodeImage(buf).data![0];
     const encoded = jsEncodeImage(bitmap);
 
-    expect(encoded.err).eq("");
-    expect(encoded.data.length).eq(1074);
+    expect(encoded.error).eq(undefined);
+    expect(encoded.data!.length).eq(1074);
 });

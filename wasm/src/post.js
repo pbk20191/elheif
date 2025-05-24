@@ -1,5 +1,3 @@
-// import Module = require("module");
-
 // Expose enum values.
 const enums = [
     'heif_error_code',

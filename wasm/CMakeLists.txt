@@ -11,16 +11,22 @@ add_dependencies(elheif-wasm elheif)
 target_link_libraries(elheif-wasm PRIVATE elheif
     # -pthread
     -lembind
-    -sINITIAL_MEMORY=64MB
-    -sEXPORT_NAME=__init__ELHEIF_MODULE
+    # -oelheif.mjs
+    -sINITIAL_MEMORY=16MB
+    -sEXPORT_NAME=loadWasm
     -sSINGLE_FILE=1
     -sENVIRONMENT=web,worker
     -sEXPORT_ES6=1
     -sALLOW_MEMORY_GROWTH=1
-    -sPTHREAD_POOL_SIZE=1
-    -sPTHREAD_POOL_SIZE_STRICT=2
+    # -sPTHREAD_POOL_SIZE=1
+    # -sPTHREAD_POOL_SIZE_STRICT=2
     -sMODULARIZE
     -sSTACK_SIZE=1MB
+    --profiling
+    # -sMINIMAL_RUNTIME=2
+    # -sSTANDALONE_WASM=1
+    -flto
+    -sFILESYSTEM=0
 )
 target_link_libraries(elheif-wasm PRIVATE "--post-js=${CMAKE_CURRENT_SOURCE_DIR}/src/post.js")
 target_link_libraries(elheif-wasm PRIVATE "--pre-js=${CMAKE_CURRENT_SOURCE_DIR}/src/pre.js")
