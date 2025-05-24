@@ -153,7 +153,7 @@ add_library(elheif STATIC src/impl.cpp)
 add_dependencies(elheif libheif)
 
 target_include_directories(elheif PUBLIC include)
-target_include_directories(elheif PRIVATE ${CMAKE_BINARY_DIR}/libheif-build/install/include)
+target_include_directories(elheif PUBLIC ${CMAKE_BINARY_DIR}/libheif-build/install/include)
 
 if(MSVC)
   # Ensure paths to static libraries are correctly used

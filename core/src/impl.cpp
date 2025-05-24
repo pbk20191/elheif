@@ -1,5 +1,5 @@
 #include "impl.h"
-#include "libheif/heif.h"
+// #include "libheif/heif.h"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -13,11 +13,12 @@
 
 #define WRAP_ERR_RET(scope, res)                                               \
   {                                                                            \
-    auto err = res;                                                            \
+    heif_error err = res;                                                            \
     if (err.code != heif_error_code::heif_error_Ok) {                          \
       return {                                                                 \
           .err = std::string("error when ") + scope +                          \
                  ", code: " + std::to_string(static_cast<int>(err.code)),      \
+          .error = err,                                                        \
       };                                                                       \
     }                                                                          \
   }
@@ -102,43 +103,43 @@ static heif_error write_impl(heif_context *ctx, const void *data, size_t size,
   auto *buffer = reinterpret_cast<std::vector<std::uint8_t> *>(userdata);
   const auto *ptr = reinterpret_cast<const std::uint8_t *>(data);
   std::copy(ptr, ptr + size, std::back_inserter(*buffer));
-  return heif_error{
-      .code = heif_error_Ok,
-      .subcode = heif_suberror_Unspecified,
-      .message = "OK",
-  };
+  return heif_error_success;
 }
 
 EncodeResult encode(const std::uint8_t* buffer, int byteSize, int width, int height) {
-  constexpr auto CHANNEL = heif_channel::heif_channel_interleaved;
-  if (byteSize < width * height * 4) {
-    return {.err = "input buffer size too small"};
-  }
-
-  auto _ = CallerGuard();
-  Image img;
-
-  WRAP_ERR_RET("create image",
-    heif_image_create(width, height, heif_colorspace_RGB,
-                      heif_chroma_interleaved_RGBA, img.data()));
-  WRAP_ERR_RET("add plane",
-    heif_image_add_plane(img.get(), CHANNEL, width, height, 32));
-
-    // heif_image_set_
-  int stride = 0;
-  auto* plane = heif_image_get_plane(img.get(), CHANNEL, &stride);
-  if (!plane) return {.err = "plane is null"};
   
-  // memcpy(plane, buffer, byteSize)
-  if (stride == width * 4) {
-    memcpy(plane, buffer, width * height * 4);
-  } else {
-    for (int y = 0; y < height; ++y) {
-      auto dst = plane + y * stride;
-      auto src = buffer + y * width * 4;
-      memcpy(dst, src, width * 4);
-    }
+  std::vector<PixelInput> pixels;
+
+  pixels.emplace_back(PixelInput{
+    .width = static_cast<size_t>(width),
+    .height = static_cast<size_t>(height),
+    .data = array_view<std::uint8_t>(buffer, static_cast<size_t>(byteSize))
+  });
+
+  std::vector<uint8_t> data;
+  auto writer = heif_writer {
+    .writer_api_version = 1,
+    .write = write_impl,
+  };
+
+  auto result = encode2(pixels, writer, &data);
+  if (result.error.code != heif_error_Ok) {
+    return {
+      .err = result.err,
+      .error = result.error
+    };
   }
+  return {.data = std::move(data)};
+}
+
+EncodeResult2 encode2(
+  const std::vector<PixelInput> & pixels,
+
+  heif_writer& writer,
+  void* userData
+) {
+  constexpr auto CHANNEL = heif_channel::heif_channel_interleaved;
+  auto _ = CallerGuard();
 
   Ctx ctx;
   Encoder encoder;
@@ -148,19 +149,51 @@ EncodeResult encode(const std::uint8_t* buffer, int byteSize, int width, int hei
       heif_compression_HEVC, encoder.data()));
   *options.data() = heif_encoding_options_alloc();
   ImageHandle handle;
+  bool primary = true;
 
-  WRAP_ERR_RET("encode image",
+  for (auto& buffer : pixels) {
+    Image img;
+    const auto width = buffer.width;
+    const auto height = buffer.height;
+    const auto pixelBuffer = buffer.data;
+    WRAP_ERR_RET("create image",
+      heif_image_create(width, height, heif_colorspace_RGB,
+                        heif_chroma_interleaved_RGBA, img.data()));
+    WRAP_ERR_RET("add plane",
+      heif_image_add_plane(img.get(), CHANNEL, width, height, 8));
+
+      // heif_image_set_
+    int stride = 0;
+    auto* plane = heif_image_get_plane(img.get(), CHANNEL, &stride);
+    
+    // memcpy(plane, buffer, byteSize)
+    if (stride == width * 4) {
+      memcpy(plane, pixelBuffer.begin(), width * height * 4);
+    } else {
+      for (int y = 0; y < height; ++y) {
+        auto dst = plane + y * stride;
+        const auto src = pixelBuffer.begin() + y * width * 4;
+        memcpy(dst, src, width * 4);
+      }
+    }
+    WRAP_ERR_RET("encode image",
     heif_context_encode_image(ctx.get(), img.get(), encoder.get(), options.get(), handle.data()));
+    if (primary) {
+      primary = false;
+      WRAP_ERR_RET(
+        "Set primary Image",
+        heif_context_set_primary_image(ctx.get(), handle.get())
+      );
+    }
+  }
 
-  std::vector<uint8_t> data;
-  auto writer = heif_writer {
-    .writer_api_version = 1,
-    .write = write_impl,
+  WRAP_ERR_RET("write", heif_context_write(ctx.get(), &writer, userData));
+  return {
+    .err = "",
+    .error = heif_error_success
   };
-  WRAP_ERR_RET("write", heif_context_write(ctx.get(), &writer, &data));
-
-  return {.data = std::move(data)};
 }
+
 
 DecodeResult decode(const std::uint8_t *buffer, int byteSize) {
   constexpr auto CHANNEL = heif_channel::heif_channel_interleaved;
@@ -175,16 +208,9 @@ DecodeResult decode(const std::uint8_t *buffer, int byteSize) {
 
   std::vector<ImageHandle> handles;
 
-  {
-    ImageHandle primaryHandle;
-    WRAP_ERR_RET("get primary handle", heif_context_get_primary_image_handle(
-                                           ctx.get(), primaryHandle.data()));
-    handles.emplace_back(std::move(primaryHandle));
-  }
-
   auto count = heif_context_get_number_of_top_level_images(ctx.get());
   if (count > 0) {
-    std::vector<heif_item_id> ids;
+    std::vector<heif_item_id> ids(count);
     auto received = heif_context_get_list_of_top_level_image_IDs(
         ctx.get(), ids.data(), count);
     for (const auto id : ids) {
@@ -230,12 +256,14 @@ DecodeResult decode(const std::uint8_t *buffer, int byteSize) {
 
   if (bitmaps.empty()) {
     return {
-        .err = "empty images",
+        .err = "",
+        .error = heif_error_success,
     };
   }
 
   return {
       .data = std::move(bitmaps),
+      .error = heif_error_success,
   };
 }
 

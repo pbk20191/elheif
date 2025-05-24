@@ -12,17 +12,21 @@ target_link_libraries(elheif-wasm PRIVATE elheif
     # -pthread
     -lembind
     -sINITIAL_MEMORY=64MB
-    -sEXPORT_NAME=__ELHEIF_MODULE
+    -sEXPORT_NAME=__init__ELHEIF_MODULE
     -sSINGLE_FILE=1
     -sENVIRONMENT=web,worker
+    -sEXPORT_ES6=1
     -sALLOW_MEMORY_GROWTH=1
     -sPTHREAD_POOL_SIZE=1
     -sPTHREAD_POOL_SIZE_STRICT=2
+    -sMODULARIZE
     -sSTACK_SIZE=1MB
 )
-
+target_link_libraries(elheif-wasm PRIVATE "--post-js=${CMAKE_CURRENT_SOURCE_DIR}/src/post.js")
+target_link_libraries(elheif-wasm PRIVATE "--pre-js=${CMAKE_CURRENT_SOURCE_DIR}/src/pre.js")
 
 # https://github.com/clangd/clangd/issues/1621
 # make clangd work with emscripten
 execute_process(COMMAND em++ --cflags OUTPUT_VARIABLE EM_CFLAGS)
-set_target_properties(elheif-wasm PROPERTIES COMPILE_FLAGS "${EM_CFLAGS}")
+message("${EM_CFLAGS}")
+set_target_properties(elheif-wasm PROPERTIES COMPILE_FLAGS "${EM_CFLAGS} ")

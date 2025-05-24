@@ -43,6 +43,7 @@ emscripten::val jsDecodeImage(const std::string &buffer)
   auto ret = emscripten::val::object();
   ret.set("err", res.err);
   ret.set("data", retItems);
+  ret.set("error", res.error);
   return ret;
 }
 
@@ -67,11 +68,118 @@ emscripten::val jsEncodeImage(const emscripten::val &imageData)
   auto ret = emscripten::val::object();
   ret.set("err", res.err);
   ret.set("data", vector_to_uint8array(res.data));
+  ret.set("error", res.error);
   return ret;
 }
 
 EMSCRIPTEN_BINDINGS()
 {
   function("jsDecodeImage", &jsDecodeImage, emscripten::return_value_policy::take_ownership());
-  function("jsEncodeImage", &jsEncodeImage), emscripten::return_value_policy::take_ownership();
+  function("jsEncodeImage", &jsEncodeImage, emscripten::return_value_policy::take_ownership());
+
+
+    emscripten::enum_<heif_error_code>("heif_error_code")
+    .value("heif_error_Ok", heif_error_Ok)
+    .value("heif_error_Input_does_not_exist", heif_error_Input_does_not_exist)
+    .value("heif_error_Invalid_input", heif_error_Invalid_input)
+    .value("heif_error_Plugin_loading_error", heif_error_Plugin_loading_error)
+    .value("heif_error_Unsupported_filetype", heif_error_Unsupported_filetype)
+    .value("heif_error_Unsupported_feature", heif_error_Unsupported_feature)
+    .value("heif_error_Usage_error", heif_error_Usage_error)
+    .value("heif_error_Memory_allocation_error", heif_error_Memory_allocation_error)
+    .value("heif_error_Decoder_plugin_error", heif_error_Decoder_plugin_error)
+    .value("heif_error_Encoder_plugin_error", heif_error_Encoder_plugin_error)
+    .value("heif_error_Encoding_error", heif_error_Encoding_error)
+    .value("heif_error_End_of_sequence", heif_error_End_of_sequence)
+    .value("heif_error_Color_profile_does_not_exist", heif_error_Color_profile_does_not_exist)
+    .value("heif_error_Canceled", heif_error_Canceled);
+
+    emscripten::enum_<heif_suberror_code>("heif_suberror_code")
+    .value("heif_suberror_Unspecified", heif_suberror_Unspecified)
+    .value("heif_suberror_Cannot_write_output_data", heif_suberror_Cannot_write_output_data)
+    .value("heif_suberror_Compression_initialisation_error", heif_suberror_Compression_initialisation_error)
+    .value("heif_suberror_Decompression_invalid_data", heif_suberror_Decompression_invalid_data)
+    .value("heif_suberror_Encoder_initialization", heif_suberror_Encoder_initialization)
+    .value("heif_suberror_Encoder_encoding", heif_suberror_Encoder_encoding)
+    .value("heif_suberror_Encoder_cleanup", heif_suberror_Encoder_cleanup)
+    .value("heif_suberror_Too_many_regions", heif_suberror_Too_many_regions)
+    .value("heif_suberror_End_of_data", heif_suberror_End_of_data)
+    .value("heif_suberror_Invalid_box_size", heif_suberror_Invalid_box_size)
+    .value("heif_suberror_No_ftyp_box", heif_suberror_No_ftyp_box)
+    .value("heif_suberror_No_idat_box", heif_suberror_No_idat_box)
+    .value("heif_suberror_No_meta_box", heif_suberror_No_meta_box)
+    .value("heif_suberror_No_moov_box", heif_suberror_No_moov_box)
+    .value("heif_suberror_No_hdlr_box", heif_suberror_No_hdlr_box)
+    .value("heif_suberror_No_hvcC_box", heif_suberror_No_hvcC_box)
+    .value("heif_suberror_No_vvcC_box", heif_suberror_No_vvcC_box)
+    .value("heif_suberror_No_pitm_box", heif_suberror_No_pitm_box)
+    .value("heif_suberror_No_ipco_box", heif_suberror_No_ipco_box)
+    .value("heif_suberror_No_ipma_box", heif_suberror_No_ipma_box)
+    .value("heif_suberror_No_iloc_box", heif_suberror_No_iloc_box)
+    .value("heif_suberror_No_iinf_box", heif_suberror_No_iinf_box)
+    .value("heif_suberror_No_iprp_box", heif_suberror_No_iprp_box)
+    .value("heif_suberror_No_iref_box", heif_suberror_No_iref_box)
+    .value("heif_suberror_No_pict_handler", heif_suberror_No_pict_handler)
+    .value("heif_suberror_Ipma_box_references_nonexisting_property", heif_suberror_Ipma_box_references_nonexisting_property)
+    .value("heif_suberror_No_properties_assigned_to_item", heif_suberror_No_properties_assigned_to_item)
+    .value("heif_suberror_No_item_data", heif_suberror_No_item_data)
+    .value("heif_suberror_Invalid_grid_data", heif_suberror_Invalid_grid_data)
+    .value("heif_suberror_Missing_grid_images", heif_suberror_Missing_grid_images)
+    .value("heif_suberror_No_av1C_box", heif_suberror_No_av1C_box)
+    .value("heif_suberror_No_avcC_box", heif_suberror_No_avcC_box)
+    .value("heif_suberror_Invalid_mini_box", heif_suberror_Invalid_mini_box)
+    .value("heif_suberror_Invalid_clean_aperture", heif_suberror_Invalid_clean_aperture)
+    .value("heif_suberror_Invalid_overlay_data", heif_suberror_Invalid_overlay_data)
+    .value("heif_suberror_Overlay_image_outside_of_canvas", heif_suberror_Overlay_image_outside_of_canvas)
+    .value("heif_suberror_Plugin_is_not_loaded", heif_suberror_Plugin_is_not_loaded)
+    .value("heif_suberror_Plugin_loading_error", heif_suberror_Plugin_loading_error)
+    .value("heif_suberror_Auxiliary_image_type_unspecified", heif_suberror_Auxiliary_image_type_unspecified)
+    .value("heif_suberror_Cannot_read_plugin_directory", heif_suberror_Cannot_read_plugin_directory)
+    .value("heif_suberror_No_matching_decoder_installed", heif_suberror_No_matching_decoder_installed)
+    .value("heif_suberror_No_or_invalid_primary_item", heif_suberror_No_or_invalid_primary_item)
+    .value("heif_suberror_No_infe_box", heif_suberror_No_infe_box)
+    .value("heif_suberror_Security_limit_exceeded", heif_suberror_Security_limit_exceeded)
+    .value("heif_suberror_Unknown_color_profile_type", heif_suberror_Unknown_color_profile_type)
+    .value("heif_suberror_Wrong_tile_image_chroma_format", heif_suberror_Wrong_tile_image_chroma_format)
+    .value("heif_suberror_Invalid_fractional_number", heif_suberror_Invalid_fractional_number)
+    .value("heif_suberror_Invalid_image_size", heif_suberror_Invalid_image_size)
+    .value("heif_suberror_Nonexisting_item_referenced", heif_suberror_Nonexisting_item_referenced)
+    .value("heif_suberror_Null_pointer_argument", heif_suberror_Null_pointer_argument)
+    .value("heif_suberror_Nonexisting_image_channel_referenced", heif_suberror_Nonexisting_image_channel_referenced)
+    .value("heif_suberror_Unsupported_plugin_version", heif_suberror_Unsupported_plugin_version)
+    .value("heif_suberror_Unsupported_writer_version", heif_suberror_Unsupported_writer_version)
+    .value("heif_suberror_Unsupported_parameter", heif_suberror_Unsupported_parameter)
+    .value("heif_suberror_Invalid_parameter_value", heif_suberror_Invalid_parameter_value)
+    .value("heif_suberror_Invalid_property", heif_suberror_Invalid_property)
+    .value("heif_suberror_Item_reference_cycle", heif_suberror_Item_reference_cycle)
+    .value("heif_suberror_Invalid_pixi_box", heif_suberror_Invalid_pixi_box)
+    .value("heif_suberror_Invalid_region_data", heif_suberror_Invalid_region_data)
+    .value("heif_suberror_Unsupported_codec", heif_suberror_Unsupported_codec)
+    .value("heif_suberror_Unsupported_image_type", heif_suberror_Unsupported_image_type)
+    .value("heif_suberror_Unsupported_data_version", heif_suberror_Unsupported_data_version)
+    .value("heif_suberror_Unsupported_generic_compression_method", heif_suberror_Unsupported_generic_compression_method)
+    .value("heif_suberror_Unsupported_essential_property", heif_suberror_Unsupported_essential_property)
+    .value("heif_suberror_Unsupported_color_conversion", heif_suberror_Unsupported_color_conversion)
+    .value("heif_suberror_Unsupported_item_construction_method", heif_suberror_Unsupported_item_construction_method)
+    .value("heif_suberror_Unsupported_header_compression_method", heif_suberror_Unsupported_header_compression_method)
+    .value("heif_suberror_Unsupported_bit_depth", heif_suberror_Unsupported_bit_depth)
+    .value("heif_suberror_Wrong_tile_image_pixel_depth", heif_suberror_Wrong_tile_image_pixel_depth)
+    .value("heif_suberror_Unknown_NCLX_color_primaries", heif_suberror_Unknown_NCLX_color_primaries)
+    .value("heif_suberror_Unknown_NCLX_transfer_characteristics", heif_suberror_Unknown_NCLX_transfer_characteristics)
+    .value("heif_suberror_Unknown_NCLX_matrix_coefficients", heif_suberror_Unknown_NCLX_matrix_coefficients)
+    .value("heif_suberror_No_ispe_property", heif_suberror_No_ispe_property)
+    .value("heif_suberror_Camera_intrinsic_matrix_undefined", heif_suberror_Camera_intrinsic_matrix_undefined)
+    .value("heif_suberror_Camera_extrinsic_matrix_undefined", heif_suberror_Camera_extrinsic_matrix_undefined)
+    .value("heif_suberror_Invalid_J2K_codestream", heif_suberror_Invalid_J2K_codestream)
+    .value("heif_suberror_No_icbr_box", heif_suberror_No_icbr_box);
+
+    emscripten::value_object<heif_error>("heif_error")
+    .field("code", &heif_error::code)
+    .field("subcode", &heif_error::subcode)
+    .field("message", emscripten::optional_override([](const struct heif_error& err) {
+        return std::string(err.message);
+    }), emscripten::optional_override([](struct heif_error& err, const std::string& value) {
+        err.message = value.c_str();
+    }));
+
 }

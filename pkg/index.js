@@ -1,5 +1,5 @@
-import './elheif-wasm'
-const initElheif = globalThis.__init__ELHEIF_MODULE
+import __init__ELHEIF_MODULE from './elheif-wasm'
+const initElheif = __init__ELHEIF_MODULE
 
 let _res = null
 const _readyPromise = new Promise((res) => { _res = res })
