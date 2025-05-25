@@ -1,5 +1,5 @@
 import { type heif_error, type EmbindModule  } from "./elheif-wasm";
-
+export type { EmbindModule, heif_error };
 /** Should be called and wait till promise fulfilled when using other APIs */
 export function ensureInitialized(): Promise<void>
 
@@ -7,4 +7,4 @@ export function ensureInitialized(): Promise<void>
 export function jsDecodeImage(buf: Uint8Array): ReturnType<EmbindModule["jsDecodeImage"]>;
 
 /** Convert RGBA bitmap to heic image */
-export function jsEncodeImage(buf: ImageData): ReturnType<EmbindModule["jsEncodeImage"]>;;
+export function jsEncodeImage(buf: ImageData): ReturnType<EmbindModule["jsEncodeImage"]>;
