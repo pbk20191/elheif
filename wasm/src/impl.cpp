@@ -61,13 +61,7 @@ HEIFDecodeResult jsDecodeImage(const std::string &buffer)
   return HEIFDecodeResult(std::move(ret));
 }
 
-std::vector<uint8_t> toVector(const emscripten::val& jsArray) {
-    const auto length = jsArray["byteLength"].as<unsigned>();
-    std::vector<uint8_t> vec(length);
-    emscripten::val memoryView = emscripten::val(emscripten::typed_memory_view<uint8_t>(length, vec.data()));
-    memoryView.call<void>("set", jsArray);
-    return vec;
-}
+
 
 // emscripten::val jsEncodeImages(const emscripten::val &imageDatas) {
 //   imageDatas.begin();

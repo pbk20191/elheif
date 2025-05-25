@@ -14,7 +14,7 @@ target_link_libraries(elheif-wasm PRIVATE elheif
     # -oelheif.mjs
     -sINITIAL_MEMORY=16MB
     -sEXPORT_NAME=MainModuleFactory
-    -sSINGLE_FILE=1
+    # -sSINGLE_FILE=1
     -sENVIRONMENT=web,worker
     -sEXPORT_ES6=1
     -sALLOW_MEMORY_GROWTH=1

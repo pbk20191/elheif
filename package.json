@@ -11,7 +11,7 @@
   "scripts": {
     "build:native": "cmake -S . -B build-native -DCMAKE_BUILD_TYPE=Debug && cmake --build build-native --target elheif-test",
     "build:wasm": "emcmake cmake -S . -B build -DEMSCRIPTEN=ON -DCMAKE_BUILD_TYPE=Release && cmake --build build --target elheif-wasm",
-    "build:js": "npm run build:wasm && cp ./build/wasm/{elheif-wasm.js,elheif-wasm.d.ts} ./pkg/",
+    "build:js": "npm run build:wasm && cp ./build/wasm/{elheif-wasm.js,elheif-wasm.d.ts,elheif-wasm.wasm} ./pkg/",
     "test:native": "./build-native/tests/elheif-test",
     "test:js": "web-test-runner"
   },
