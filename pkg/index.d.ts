@@ -8,3 +8,5 @@ export function jsDecodeImage(buf: Uint8Array): ReturnType<EmbindModule["jsDecod
 
 /** Convert RGBA bitmap to heic image */
 export function jsEncodeImage(buf: ImageData): ReturnType<EmbindModule["jsEncodeImage"]>;
+
+export function jsEncodeImages(buf: ImageData[]): ReturnType<EmbindModule["jsEncodeImages"]>;

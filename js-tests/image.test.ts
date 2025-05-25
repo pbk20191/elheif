@@ -1,4 +1,4 @@
-import { ensureInitialized, jsDecodeImage, jsEncodeImage } from "../pkg";
+import { ensureInitialized, jsDecodeImage, jsEncodeImage, jsEncodeImages } from "../pkg";
 import { expect } from '@esm-bundle/chai';
 
 declare function it(...args: any[]): void;
@@ -26,10 +26,9 @@ it('decode', async () => {
     console.log(res);
     expect(res.error).eq(undefined);
     expect(res.data!.length).eq(1);
+    const frame1 = res.data![0];
     expect(res.data![0].width).eq(10);
     expect(res.data![0].height).eq(10);
-    const clamped = new Uint8ClampedArray(res.data![0].data);
-    const im = new ImageData(clamped, 10, 10);
 })
 
 it('encode', async () => {

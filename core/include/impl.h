@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include <libheif/heif.h>
+#include <functional>
+
 namespace Elheif {
 
 
@@ -55,8 +57,8 @@ EncodeResult encode(const std::uint8_t *buffer, int byteSize, int width,
                     int height);
 
 EncodeResult2 encode2(
-  const std::vector<PixelInput> & pixels,
-
+    std::size_t frameCount,
+    std::function<PixelInput(std::size_t)> getFrame,
   heif_writer& writer,
   void* userData
 );

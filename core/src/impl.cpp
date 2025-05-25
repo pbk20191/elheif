@@ -122,7 +122,7 @@ EncodeResult encode(const std::uint8_t* buffer, int byteSize, int width, int hei
     .write = write_impl,
   };
 
-  auto result = encode2(pixels, writer, &data);
+  auto result = encode2(1, [pixels](size_t t) { return pixels[t]; }, writer, &data);
   if (result.error.code != heif_error_Ok) {
     return {
       .err = result.err,
@@ -133,8 +133,8 @@ EncodeResult encode(const std::uint8_t* buffer, int byteSize, int width, int hei
 }
 
 EncodeResult2 encode2(
-  const std::vector<PixelInput> & pixels,
-
+    std::size_t frameCount,
+    std::function<PixelInput(std::size_t)> getFrame,
   heif_writer& writer,
   void* userData
 ) {
@@ -151,7 +151,11 @@ EncodeResult2 encode2(
   ImageHandle handle;
   bool primary = true;
 
-  for (auto& buffer : pixels) {
+  for (std::size_t i = 0; i < frameCount; ++i) {
+    auto buffer = getFrame(i);
+    if (buffer.data.size() == 0) {
+      continue; // skip empty frames
+    }
     Image img;
     const auto width = buffer.width;
     const auto height = buffer.height;
@@ -186,6 +190,7 @@ EncodeResult2 encode2(
       );
     }
   }
+
 
   WRAP_ERR_RET("write", heif_context_write(ctx.get(), &writer, userData));
   return {

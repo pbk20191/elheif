@@ -38,3 +38,8 @@ export function jsEncodeImage(buf, width, height) {
     checkReady()
     return elheif.jsEncodeImage(buf, width, height)
 }
+
+export function jsEncodeImages(buf) {
+    checkReady()
+    return elheif.jsEncodeImages(buf)
+}
