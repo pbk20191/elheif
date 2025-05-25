@@ -5,4 +5,5 @@
 /pkg/elheif-wasm.js
 /pkg/elheif-wasm-worker.js
 /pkg/elheif-wasm.wasm
+/pkg/elheif-wasm.d.ts
 /coverage

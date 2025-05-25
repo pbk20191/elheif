@@ -13,7 +13,7 @@ target_link_libraries(elheif-wasm PRIVATE elheif
     -lembind
     # -oelheif.mjs
     -sINITIAL_MEMORY=16MB
-    -sEXPORT_NAME=loadWasm
+    -sEXPORT_NAME=MainModuleFactory
     -sSINGLE_FILE=1
     -sENVIRONMENT=web,worker
     -sEXPORT_ES6=1
@@ -30,6 +30,7 @@ target_link_libraries(elheif-wasm PRIVATE elheif
 )
 target_link_libraries(elheif-wasm PRIVATE "--post-js=${CMAKE_CURRENT_SOURCE_DIR}/src/post.js")
 target_link_libraries(elheif-wasm PRIVATE "--pre-js=${CMAKE_CURRENT_SOURCE_DIR}/src/pre.js")
+target_link_libraries(elheif-wasm PRIVATE "--emit-tsd elheif-wasm.d.ts")
 
 # https://github.com/clangd/clangd/issues/1621
 # make clangd work with emscripten

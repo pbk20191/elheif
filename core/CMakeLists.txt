@@ -96,7 +96,6 @@ endif()
 
 
 # set(CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}/aom/bui")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set(LIBDE265_INCLUDE_DIR ${CMAKE_BINARY_DIR}/libde265-build/install/include)
 set(LIBDE265_LIBRARY_DIR ${CMAKE_BINARY_DIR}/libde265-build/libde265)

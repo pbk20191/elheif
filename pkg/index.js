@@ -1,5 +1,4 @@
-import __init__ELHEIF_MODULE from './elheif-wasm'
-const initElheif = __init__ELHEIF_MODULE
+import MainModuleFactory from './elheif-wasm'
 
 let _res = null
 const _readyPromise = new Promise((res) => { _res = res })
@@ -16,10 +15,12 @@ export async function ensureInitialized() {
     elheif.onRuntimeInitialized = () => {
         _ready = true
         _res()
+        _res = null
     }
-    initElheif(elheif)
 
-    return _readyPromise
+    
+    
+    return MainModuleFactory(elheif)
 }
 
 function checkReady() {

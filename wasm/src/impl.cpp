@@ -13,6 +13,11 @@
 #include <vector>
 #include <emscripten/emscripten.h>
 
+EMSCRIPTEN_DECLARE_VAL_TYPE(HEIFError)
+EMSCRIPTEN_DECLARE_VAL_TYPE(ImageDataType)
+EMSCRIPTEN_DECLARE_VAL_TYPE(HEIFDecodeResult)
+EMSCRIPTEN_DECLARE_VAL_TYPE(HEIFEncodeResult)
+
 emscripten::val vector_to_uint8array(const std::vector<uint8_t> &buffer)
 {
   using namespace emscripten;
@@ -24,7 +29,7 @@ emscripten::val vector_to_uint8array(const std::vector<uint8_t> &buffer)
   return uint8array;
 }
 
-emscripten::val jsDecodeImage(const std::string &buffer)
+HEIFDecodeResult jsDecodeImage(const std::string &buffer)
 {
   using namespace emscripten;
 
@@ -50,9 +55,10 @@ emscripten::val jsDecodeImage(const std::string &buffer)
     error_option.set("cause", res.error);
     const auto jsError = Error.new_(res.err, error_option);
     ret.set("error", jsError);
+    // jsError.throw_();
   }
 
-  return ret;
+  return HEIFDecodeResult(std::move(ret));
 }
 
 std::vector<uint8_t> toVector(const emscripten::val& jsArray) {
@@ -63,12 +69,18 @@ std::vector<uint8_t> toVector(const emscripten::val& jsArray) {
     return vec;
 }
 
-emscripten::val jsEncodeImage(const emscripten::val &imageData)
+// emscripten::val jsEncodeImages(const emscripten::val &imageDatas) {
+//   imageDatas.begin();
+//   for (const auto& item : imageDatas) {
+
+//   }
+// }
+
+HEIFEncodeResult jsEncodeImage(const ImageDataType &imageData)
 {
   const size_t width = imageData["width"].as<size_t>();
   const size_t height = imageData["height"].as<size_t>();
-  const emscripten::val jsPixelBuffer = imageData["data"];
-  const auto pixelBuffer = jsPixelBuffer.as<std::string>();
+  const auto pixelBuffer = imageData["data"].as<std::string>();
   auto res =
       Elheif::encode(reinterpret_cast<const std::uint8_t *>(pixelBuffer.data()),
                      pixelBuffer.size(), width, height);
@@ -82,16 +94,22 @@ emscripten::val jsEncodeImage(const emscripten::val &imageData)
     auto error_option = emscripten::val::object();
     error_option.set("cause", res.error);
     const auto jsError = Error.new_(res.err, error_option);
+    // jsError.throw_();
     ret.set("error", jsError);
   }
-  return ret;
+  return HEIFEncodeResult(std::move(ret));
 }
+
+
 
 EMSCRIPTEN_BINDINGS()
 {
   function("jsDecodeImage", &jsDecodeImage, emscripten::return_value_policy::take_ownership());
   function("jsEncodeImage", &jsEncodeImage, emscripten::return_value_policy::take_ownership());
-
+  emscripten::register_type<ImageDataType>("ImageData");
+  emscripten::register_type<HEIFDecodeResult>("{ data?: ImageData[], error?: Error & { cause: heif_error } }");
+  emscripten::register_type<HEIFError>(" Error & { cause: heif_error } ");
+  emscripten::register_type<HEIFEncodeResult>("{ error?:Error & { cause: heif_error }, data?: Uint8Array }");
 
     emscripten::enum_<heif_error_code>("heif_error_code")
     .value("heif_error_Ok", heif_error_Ok)
