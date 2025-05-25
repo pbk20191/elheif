@@ -1,4 +1,4 @@
-import {default as HeifModuleFactory } from "../pkg";
+import { default as HeifModuleFactory } from "../pkg";
 import { expect } from '@esm-bundle/chai';
 
 declare function it(...args: any[]): void;
@@ -36,8 +36,8 @@ it('encode', async () => {
 
     const buf = loadHeicImage();
     const bitmap = module.jsDecodeImage(buf).data![0];
-    const encoded = module.jsEncodeImage(bitmap);
+    const encoded = module.jsEncodeImages([bitmap]);
 
     expect(encoded.error).eq(undefined);
-    expect(encoded.data!.length).eq(1074);
+    expect(encoded.data!.byteLength).eq(1074);
 });

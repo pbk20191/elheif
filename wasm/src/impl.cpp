@@ -18,7 +18,6 @@ EMSCRIPTEN_DECLARE_VAL_TYPE(ImageDataType)
 EMSCRIPTEN_DECLARE_VAL_TYPE(HEIFDecodeResult)
 EMSCRIPTEN_DECLARE_VAL_TYPE(HEIFEncodeResult)
 EMSCRIPTEN_DECLARE_VAL_TYPE(PixelFrames)
-EMSCRIPTEN_DECLARE_VAL_TYPE(HEIFEncodeResult2)
 
 emscripten::val vector_to_uint8array(const std::vector<uint8_t> &buffer)
 {
@@ -91,31 +90,8 @@ static heif_error write_impl(heif_context *ctx, const void *data, size_t size,
 //   }
 // }
 
-HEIFEncodeResult jsEncodeImage(const ImageDataType &imageData)
-{
-  const size_t width = imageData["width"].as<size_t>();
-  const size_t height = imageData["height"].as<size_t>();
-  const auto pixelBuffer = imageData["data"].as<std::string>();
-  auto res =
-      Elheif::encode(reinterpret_cast<const std::uint8_t *>(pixelBuffer.data()),
-                     pixelBuffer.size(), width, height);
-  const auto Error = emscripten::val::global("Error");
-  auto ret = emscripten::val::object();
-  
 
-  if (res.error.code == heif_error_Ok) {
-    ret.set("data", vector_to_uint8array(res.data));
-  } else {
-    auto error_option = emscripten::val::object();
-    error_option.set("cause", res.error);
-    const auto jsError = Error.new_(res.err, error_option);
-    // jsError.throw_();
-    ret.set("error", jsError);
-  }
-  return HEIFEncodeResult(std::move(ret));
-}
-
-HEIFEncodeResult2 jsEncodeImages(const PixelFrames &frames)
+HEIFEncodeResult jsEncodeImages(const PixelFrames &frames)
 {
   auto writer = heif_writer {
     .writer_api_version = 1,
@@ -149,19 +125,17 @@ HEIFEncodeResult2 jsEncodeImages(const PixelFrames &frames)
     // jsError.throw_();
     ret.set("error", jsError);
   }
-  return HEIFEncodeResult2(std::move(ret));
+  return HEIFEncodeResult(std::move(ret));
 }
 
 EMSCRIPTEN_BINDINGS()
 {
   function("jsDecodeImage", &jsDecodeImage, emscripten::return_value_policy::take_ownership());
-  function("jsEncodeImage", &jsEncodeImage, emscripten::return_value_policy::take_ownership());
   function("jsEncodeImages", &jsEncodeImages, emscripten::return_value_policy::take_ownership());
   emscripten::register_type<ImageDataType>("ImageData");
   emscripten::register_type<HEIFDecodeResult>("{ data?: ImageData[], error?: Error & { cause: heif_error } }");
   emscripten::register_type<HEIFError>(" Error & { cause: heif_error } ");
-  emscripten::register_type<HEIFEncodeResult>("{ error?:Error & { cause: heif_error }, data?: Uint8Array }");
-  emscripten::register_type<HEIFEncodeResult2>("{ error?:Error & { cause: heif_error }, data?: ArrayBuffer|SharedArrayBuffer }");
+  emscripten::register_type<HEIFEncodeResult>("{ error?:Error & { cause: heif_error }, data?: ArrayBuffer|SharedArrayBuffer }");
   emscripten::register_type<PixelFrames>("ImageData[]");
     emscripten::enum_<heif_error_code>("heif_error_code")
     .value("heif_error_Ok", heif_error_Ok)
