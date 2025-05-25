@@ -11,7 +11,7 @@
   "scripts": {
     "build:native": "cmake -S . -B build-native -DCMAKE_BUILD_TYPE=Debug && cmake --build build-native --target elheif-test",
     "build:wasm": "emcmake cmake -S . -B build -DEMSCRIPTEN=ON -DCMAKE_BUILD_TYPE=Release && cmake --build build --target elheif-wasm",
-    "build:js": "npm run build:wasm && cp ./build/wasm/elheif-wasm{.js,.d.ts,.wasm} ./pkg/",
+    "build:js": "npm run build:wasm && node scripts/copy-product.mjs",
     "test:native": "./build-native/tests/elheif-test",
     "test:js": "web-test-runner"
   },
@@ -23,7 +23,7 @@
     "libde265",
     "kvazaar"
   ],
-  "author": "hpp2334",
+  "author": "pbk20191",
   "license": "MIT",
   "devDependencies": {
     "@esm-bundle/chai": "4.3.4-fix.0",
@@ -33,7 +33,7 @@
     "@web/test-runner": "^0.18.2",
     "@web/test-runner-playwright": "^0.11.0",
     "playwright": "^1.44.1",
-    "tsx": "^4.15.2"
+    "typescript": "^5.8.3"
   },
   "files": [
     "pkg/**"
