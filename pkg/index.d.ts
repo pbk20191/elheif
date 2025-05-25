@@ -1,12 +1,8 @@
-import { type heif_error, type EmbindModule  } from "./elheif-wasm";
-export type { EmbindModule, heif_error };
-/** Should be called and wait till promise fulfilled when using other APIs */
-export function ensureInitialized(): Promise<void>
+import MainModuleFactory from './elheif-wasm';
 
-/** Convert heic image to RGBA bitmaps */
-export function jsDecodeImage(buf: Uint8Array): ReturnType<EmbindModule["jsDecodeImage"]>;
+// TypeScript bindings for emscripten-generated code.  Automatically generated at compile time.
+export * from './elheif-wasm';
 
-/** Convert RGBA bitmap to heic image */
-export function jsEncodeImage(buf: ImageData): ReturnType<EmbindModule["jsEncodeImage"]>;
 
-export function jsEncodeImages(buf: ImageData[]): ReturnType<EmbindModule["jsEncodeImages"]>;
+// export { default as MainModuleFactory } from './elheif-wasm';
+export default MainModuleFactory;
