@@ -1,6 +1,6 @@
 {
   "name": "elheif",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A wasm heic image encoder and decoder library compiled from libheif, libde265 and kvazaar.",
   "type": "module",
   "main": "pkg/index.js",
