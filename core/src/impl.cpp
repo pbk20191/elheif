@@ -10,6 +10,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <libheif/heif.h>
 
 #define WRAP_ERR_RET(scope, res)                                               \
   {                                                                            \
@@ -148,11 +149,24 @@ EncodeResult2 encode2(
     WRAP_ERR_RET("set Lossless",
       heif_encoder_set_lossless(encoder.get(), options->lossless));
     if (options->sharpYUV) {
-      nclx_profile = std::unique_ptr<heif_color_profile_nclx, void (*)(heif_color_profile_nclx*)>(
-          heif_nclx_color_profile_alloc(), heif_nclx_color_profile_free);
-        nclx_profile->matrix_coefficients = heif_matrix_coefficients_RGB_GBR;
-        encoder_options->output_nclx_profile = nclx_profile.get();
+      encoder_options->color_conversion_options.only_use_preferred_chroma_algorithm = 1;
+      encoder_options->color_conversion_options.preferred_chroma_downsampling_algorithm = heif_chroma_downsampling_sharp_yuv;
     }
+
+    
+    // if (options->lossless) {
+    //     nclx_profile = std::unique_ptr<heif_color_profile_nclx, void (*)(heif_color_profile_nclx*)>(
+    //       heif_nclx_color_profile_alloc(), heif_nclx_color_profile_free);
+    //     WRAP_ERR_RET("set nclx profile",
+    //       heif_nclx_color_profile_set_matrix_coefficients(nclx_profile.get(),
+    //         heif_matrix_coefficients_RGB_GBR));
+
+
+    //         // heif_nclx_profile
+    //     // nclx_profile->matrix_coefficients = heif_matrix_coefficients_RGB_GBR;
+    //     // heif_encoder_set
+    //     encoder_options->output_nclx_profile = nclx_profile.get();
+    // }
   }
 
   for (std::size_t i = 0; i < frameCount; ++i) {

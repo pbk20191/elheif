@@ -12,7 +12,7 @@ target_link_libraries(elheif-wasm PRIVATE elheif
     # -pthread
     -lembind
     # -oelheif.mjs
-    -sINITIAL_MEMORY=16MB
+    -sINITIAL_HEAP=4MB
     -sEXPORT_NAME=MainModuleFactory
     # -sSINGLE_FILE=1
     -sENVIRONMENT=web,worker
@@ -26,6 +26,7 @@ target_link_libraries(elheif-wasm PRIVATE elheif
     # -sMINIMAL_RUNTIME=2
     # -sSTANDALONE_WASM=1
     -flto
+    -sMALLOC=emmalloc
     -sFILESYSTEM=0
 )
 target_link_libraries(elheif-wasm PRIVATE "--post-js=${CMAKE_CURRENT_SOURCE_DIR}/src/post.js")
