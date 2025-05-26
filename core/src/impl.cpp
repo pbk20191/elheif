@@ -56,15 +56,7 @@ struct Encoder {
   constexpr static void free(Type *ptr) { heif_encoder_release(ptr); }
 };
 
-struct EncodingOptions {
-  using Type = heif_encoding_options;
-  constexpr static void free(Type *ptr) { heif_encoding_options_free(ptr); }
-};
 
-struct DecodingOptions {
-  using Type = heif_decoding_options;
-  constexpr static void free(Type *ptr) { heif_decoding_options_free(ptr); }
-};
 } // namespace AutoFreeWrapperPresets
 
 template <typename T> class AutoFreeWrapper {
@@ -93,10 +85,6 @@ private:
 using ImageHandle = AutoFreeWrapper<AutoFreeWrapperPresets::ImageHandle>;
 using Image = AutoFreeWrapper<AutoFreeWrapperPresets::Image>;
 using Encoder = AutoFreeWrapper<AutoFreeWrapperPresets::Encoder>;
-using EncodingOptions =
-    AutoFreeWrapper<AutoFreeWrapperPresets::EncodingOptions>;
-using DecodingOptions =
-    AutoFreeWrapper<AutoFreeWrapperPresets::DecodingOptions>;
 
 static heif_error write_impl(heif_context *ctx, const void *data, size_t size,
                              void *userdata) {
@@ -122,7 +110,7 @@ EncodeResult encode(const std::uint8_t* buffer, int byteSize, int width, int hei
     .write = write_impl,
   };
 
-  auto result = encode2(1, [pixels](size_t t) { return pixels[t]; }, writer, &data);
+  auto result = encode2(1, std::nullopt, [pixels](size_t t) { return pixels[t]; }, writer, &data);
   if (result.error.code != heif_error_Ok) {
     return {
       .err = result.err,
@@ -134,6 +122,7 @@ EncodeResult encode(const std::uint8_t* buffer, int byteSize, int width, int hei
 
 EncodeResult2 encode2(
     std::size_t frameCount,
+    std::optional<EncodingOption> options,
     std::function<PixelInput(std::size_t)> getFrame,
   heif_writer& writer,
   void* userData
@@ -143,13 +132,28 @@ EncodeResult2 encode2(
 
   Ctx ctx;
   Encoder encoder;
-  EncodingOptions options;
+  auto encoder_options = std::unique_ptr<heif_encoding_options, void (*)(heif_encoding_options*)>(
+      heif_encoding_options_alloc(), heif_encoding_options_free);
   WRAP_ERR_RET("get encoder",
     heif_context_get_encoder_for_format(ctx.get(),
       heif_compression_HEVC, encoder.data()));
-  *options.data() = heif_encoding_options_alloc();
   ImageHandle handle;
   bool primary = true;
+  std::unique_ptr<heif_color_profile_nclx, void (*)(heif_color_profile_nclx*)> nclx_profile(nullptr, nullptr);
+
+  if (options) {
+    WRAP_ERR_RET("set lossy quality",
+      heif_encoder_set_lossy_quality(encoder.get(), options->quality));
+
+    WRAP_ERR_RET("set Lossless",
+      heif_encoder_set_lossless(encoder.get(), options->lossless));
+    if (options->sharpYUV) {
+      nclx_profile = std::unique_ptr<heif_color_profile_nclx, void (*)(heif_color_profile_nclx*)>(
+          heif_nclx_color_profile_alloc(), heif_nclx_color_profile_free);
+        nclx_profile->matrix_coefficients = heif_matrix_coefficients_RGB_GBR;
+        encoder_options->output_nclx_profile = nclx_profile.get();
+    }
+  }
 
   for (std::size_t i = 0; i < frameCount; ++i) {
     auto buffer = getFrame(i);
@@ -180,8 +184,9 @@ EncodeResult2 encode2(
         memcpy(dst, src, width * 4);
       }
     }
+
     WRAP_ERR_RET("encode image",
-    heif_context_encode_image(ctx.get(), img.get(), encoder.get(), options.get(), handle.data()));
+    heif_context_encode_image(ctx.get(), img.get(), encoder.get(), encoder_options.get(), handle.data()));
     if (primary) {
       primary = false;
       WRAP_ERR_RET(
@@ -208,7 +213,7 @@ DecodeResult decode(const std::uint8_t *buffer, int byteSize) {
   assert(ctx.get() != nullptr);
 
   // WRAP_ERR_RET("init", heif_init(nullptr));
-  WRAP_ERR_RET("read from memory", heif_context_read_from_memory(
+  WRAP_ERR_RET("read from memory", heif_context_read_from_memory_without_copy(
                                        ctx.get(), buffer, byteSize, nullptr));
 
   std::vector<ImageHandle> handles;

@@ -91,7 +91,7 @@ static heif_error write_impl(heif_context *ctx, const void *data, size_t size,
 // }
 
 
-HEIFEncodeResult jsEncodeImages(const PixelFrames &frames)
+HEIFEncodeResult jsEncodeImages(const PixelFrames &frames, const std::optional<Elheif::EncodingOption> &options)
 {
   auto writer = heif_writer {
     .writer_api_version = 1,
@@ -100,7 +100,7 @@ HEIFEncodeResult jsEncodeImages(const PixelFrames &frames)
   auto param = emscripten::val::object();
   emscripten::val arrayBuf = emscripten::val::undefined();
   const unsigned length = frames["length"].as<unsigned>();
-  auto res = Elheif::encode2(length, [frames](auto idx){
+  auto res = Elheif::encode2(length, options, [frames](auto idx){
     emscripten::val const& imageData = frames[idx];
   
     const size_t width = imageData["width"].as<size_t>();
@@ -132,6 +132,13 @@ EMSCRIPTEN_BINDINGS()
 {
   function("jsDecodeImage", &jsDecodeImage, emscripten::return_value_policy::take_ownership());
   function("jsEncodeImages", &jsEncodeImages, emscripten::return_value_policy::take_ownership());
+  emscripten::register_optional<Elheif::EncodingOption>();
+
+    emscripten::value_object<Elheif::EncodingOption>("EncodingOption")
+        .field("quality", &Elheif::EncodingOption::quality)
+        .field("lossless", &Elheif::EncodingOption::lossless)
+        .field("sharpYUV", &Elheif::EncodingOption::sharpYUV);
+
   emscripten::register_type<ImageDataType>("ImageData");
   emscripten::register_type<HEIFDecodeResult>("{ data?: ImageData[], error?: Error & { cause: heif_error } }");
   emscripten::register_type<HEIFError>(" Error & { cause: heif_error } ");

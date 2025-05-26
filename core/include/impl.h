@@ -23,6 +23,12 @@ public:
    auto end() const noexcept { return ptr_ + len_; }
 };
 
+struct EncodingOption {
+  int quality = 50;
+  bool lossless = false;
+  bool sharpYUV = false;
+};
+
 struct PixelInput {
   std::size_t width;
   std::size_t height;
@@ -58,6 +64,7 @@ EncodeResult encode(const std::uint8_t *buffer, int byteSize, int width,
 
 EncodeResult2 encode2(
     std::size_t frameCount,
+    std::optional<EncodingOption> options,
     std::function<PixelInput(std::size_t)> getFrame,
   heif_writer& writer,
   void* userData

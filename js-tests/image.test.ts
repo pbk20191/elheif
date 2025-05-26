@@ -36,7 +36,7 @@ it('encode', async () => {
 
     const buf = loadHeicImage();
     const bitmap = module.jsDecodeImage(buf).data![0];
-    const encoded = module.jsEncodeImages([bitmap]);
+    const encoded = module.jsEncodeImages([bitmap], undefined);
 
     expect(encoded.error).eq(undefined);
     expect(encoded.data!.byteLength).eq(1074);
