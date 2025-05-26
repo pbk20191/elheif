@@ -149,7 +149,7 @@ EncodeResult2 encode2(
     WRAP_ERR_RET("set Lossless",
       heif_encoder_set_lossless(encoder.get(), options->lossless));
     if (options->sharpYUV) {
-      encoder_options->color_conversion_options.only_use_preferred_chroma_algorithm = 1;
+      // encoder_options->color_conversion_options.only_use_preferred_chroma_algorithm = 1;
       encoder_options->color_conversion_options.preferred_chroma_downsampling_algorithm = heif_chroma_downsampling_sharp_yuv;
     }
 
