@@ -4,6 +4,8 @@
 #include <vector>
 #include <libheif/heif.h>
 #include <functional>
+#include <optional>
+#include <memory>
 
 namespace Elheif {
 
