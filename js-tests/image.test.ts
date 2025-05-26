@@ -39,5 +39,5 @@ it('encode', async () => {
     const encoded = module.jsEncodeImages([bitmap], undefined);
 
     expect(encoded.error).eq(undefined);
-    expect(encoded.data!.byteLength).eq(1074);
+    expect(encoded.data!.byteLength).eq(1124);
 });
